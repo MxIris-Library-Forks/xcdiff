@@ -17,8 +17,8 @@
 import Foundation
 import XcodeProj
 
-public struct CompareResult: GenericCompareResult, Equatable {
-    public struct DifferentValues: Encodable, Equatable {
+public struct CompareResult: GenericCompareResult, Decodable, Equatable {
+    public struct DifferentValues: Codable, Equatable {
         public let context: String
         public let first: String
         public let second: String

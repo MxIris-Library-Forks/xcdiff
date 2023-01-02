@@ -46,21 +46,34 @@ public struct Result {
 }
 
 public protocol ProjectComparator {
-    func compare(_ firstPath: Path,
-                 _ secondPath: Path,
-                 parameters: ComparatorParameters) throws -> Result
+    func compare(
+        _ firstPath: Path,
+        _ secondPath: Path,
+        parameters: ComparatorParameters
+    ) throws -> Result
+    func compare(
+        _ firstPath: Path,
+        _ secondPath: Path,
+        parameters: ComparatorParameters
+    ) throws -> [CompareResult]
 }
 
-public final class ProjectComparatorFactory {
-    public static func create(comparators: [ComparatorType] = .allAvailableComparators,
-                              mode: Mode = .default) -> ProjectComparator {
-        let resultRenderer = UniversalResultRenderer(format: mode.format,
-                                                     verbose: mode.verbose)
+public enum ProjectComparatorFactory {
+    public static func create(
+        comparators: [ComparatorType] = .allAvailableComparators,
+        mode: Mode = .default
+    ) -> ProjectComparator {
+        let resultRenderer = UniversalResultRenderer(
+            format: mode.format,
+            verbose: mode.verbose
+        )
         let xcodeProjLoader = DefaultXcodeProjLoader()
-        return DefaultProjectComparator(comparators: comparators.map { $0.comparator() },
-                                        resultRenderer: resultRenderer,
-                                        xcodeProjLoader: xcodeProjLoader,
-                                        differencesOnly: mode.differencesOnly)
+        return DefaultProjectComparator(
+            comparators: comparators.map { $0.comparator() },
+            resultRenderer: resultRenderer,
+            xcodeProjLoader: xcodeProjLoader,
+            differencesOnly: mode.differencesOnly
+        )
     }
 }
 
@@ -72,10 +85,12 @@ final class DefaultProjectComparator: ProjectComparator {
 
     // MARK: - Lifecycle
 
-    init(comparators: [Comparator],
-         resultRenderer: ResultRenderer,
-         xcodeProjLoader: XcodeProjLoader,
-         differencesOnly: Bool) {
+    init(
+        comparators: [Comparator],
+        resultRenderer: ResultRenderer,
+        xcodeProjLoader: XcodeProjLoader,
+        differencesOnly: Bool
+    ) {
         self.comparators = comparators
         self.resultRenderer = resultRenderer
         self.xcodeProjLoader = xcodeProjLoader
@@ -84,9 +99,11 @@ final class DefaultProjectComparator: ProjectComparator {
 
     // MARK: - ProjectComparator
 
-    func compare(_ firstPath: Path,
-                 _ secondPath: Path,
-                 parameters: ComparatorParameters) throws -> Result {
+    func compare(
+        _ firstPath: Path,
+        _ secondPath: Path,
+        parameters: ComparatorParameters
+    ) throws -> Result {
         let xcodeProj1 = try createProjectDescriptor(with: firstPath)
         let xcodeProj2 = try createProjectDescriptor(with: secondPath)
         let result = try compare(xcodeProj1, xcodeProj2, parameters: parameters)
@@ -95,11 +112,23 @@ final class DefaultProjectComparator: ProjectComparator {
         return Result(success: success, output: output)
     }
 
+    func compare(
+        _ firstPath: Path,
+        _ secondPath: Path,
+        parameters: ComparatorParameters
+    ) throws -> [CompareResult] {
+        let xcodeProj1 = try createProjectDescriptor(with: firstPath)
+        let xcodeProj2 = try createProjectDescriptor(with: secondPath)
+        return try compare(xcodeProj1, xcodeProj2, parameters: parameters).results
+    }
+
     // MARK: - Private
 
-    private func compare(_ first: ProjectDescriptor,
-                         _ second: ProjectDescriptor,
-                         parameters: ComparatorParameters) throws -> ProjectCompareResult {
+    private func compare(
+        _ first: ProjectDescriptor,
+        _ second: ProjectDescriptor,
+        parameters: ComparatorParameters
+    ) throws -> ProjectCompareResult {
         do {
             let results = try comparators
                 .flatMap { try $0.compare(first, second, parameters: parameters) }
