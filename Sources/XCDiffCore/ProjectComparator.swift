@@ -55,7 +55,7 @@ public protocol ProjectComparator {
         _ firstPath: Path,
         _ secondPath: Path,
         parameters: ComparatorParameters
-    ) throws -> [CompareResult]
+    ) throws -> ProjectCompareResult
 }
 
 public enum ProjectComparatorFactory {
@@ -104,9 +104,7 @@ final class DefaultProjectComparator: ProjectComparator {
         _ secondPath: Path,
         parameters: ComparatorParameters
     ) throws -> Result {
-        let xcodeProj1 = try createProjectDescriptor(with: firstPath)
-        let xcodeProj2 = try createProjectDescriptor(with: secondPath)
-        let result = try compare(xcodeProj1, xcodeProj2, parameters: parameters)
+        let result: ProjectCompareResult = try compare(firstPath, secondPath, parameters: parameters)
         let success = result.same()
         let output = try resultRenderer.render(result)
         return Result(success: success, output: output)
@@ -116,10 +114,10 @@ final class DefaultProjectComparator: ProjectComparator {
         _ firstPath: Path,
         _ secondPath: Path,
         parameters: ComparatorParameters
-    ) throws -> [CompareResult] {
+    ) throws -> ProjectCompareResult {
         let xcodeProj1 = try createProjectDescriptor(with: firstPath)
         let xcodeProj2 = try createProjectDescriptor(with: secondPath)
-        return try compare(xcodeProj1, xcodeProj2, parameters: parameters).results
+        return try compare(xcodeProj1, xcodeProj2, parameters: parameters)
     }
 
     // MARK: - Private
