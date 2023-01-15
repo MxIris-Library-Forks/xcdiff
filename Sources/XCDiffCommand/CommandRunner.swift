@@ -133,7 +133,7 @@ public final class CommandRunner {
         )
 
         // Run compare
-        let result = try projectComparator.compare(path1, path2, parameters: parameters)
+        let result: Result = try projectComparator.compare(path1, path2, parameters: parameters)
 
         printer.text(result.output)
 
