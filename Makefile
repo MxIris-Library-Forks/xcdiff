@@ -1,5 +1,5 @@
 VERSION_MAJOR = 0
-VERSION_MINOR = 9
+VERSION_MINOR = 11
 VERSION_PATCH = 0
 VERSION = $(VERSION_MAJOR).$(VERSION_MINOR).$(VERSION_PATCH)
 GIT_SHORT_HASH = $(shell git rev-parse --short HEAD)
@@ -32,6 +32,9 @@ update_version:
 
 update_hash:
 	sed -i '' 's/#GIT_SHORT_HASH#/$(GIT_SHORT_HASH)/' Sources/XCDiffCommand/Constants.swift
+
+update_homebrew:
+	brew bump-formula-pr xcdiff --version="${VERSION}"
 
 format:
 	swiftformat .

@@ -20,17 +20,33 @@ import XcodeProj
 
 typealias TargetPair = (first: PBXTarget, second: PBXTarget)
 
-struct SourceDescriptor: Hashable {
+struct SourceDescriptor: Hashable, DiffComparable {
+    var diffKey: String {
+        path
+    }
+
     let path: String
     let flags: String?
 }
 
-struct HeaderDescriptor: Hashable {
+struct HeaderDescriptor: Hashable, DiffComparable {
+    var diffKey: String {
+        path
+    }
+
     let path: String
     let attributes: String?
 }
 
-struct LinkedDependencyDescriptor: Hashable {
+struct LinkedDependencyDescriptor: Hashable, DiffComparable {
+    var diffKey: String {
+        key ?? ""
+    }
+
+    var key: String? {
+        name ?? path
+    }
+
     let name: String?
     let path: String?
     let package: SwiftPackageDescriptor?
@@ -45,6 +61,37 @@ struct EmbeddedFrameworksDescriptor: Hashable {
 enum DependencyDescriptorType: String {
     case required
     case optional
+}
+
+enum AttributeValue: Equatable, CustomStringConvertible {
+    case dictionary([String: AttributeValue])
+    case string(String)
+
+    var description: String {
+        switch self {
+        case let .string(string):
+            return "\(string)"
+        case let .dictionary(dictionary):
+            return string(from: dictionary)
+        }
+    }
+
+    private func string(from dictionary: [String: AttributeValue]) -> String {
+        let value = dictionary
+            .sorted { $0.key < $1.key }
+            .map { "\"\($0.key)\": \(string(from: $0.value))" }
+            .joined(separator: ", ")
+        return "[\(value)]"
+    }
+
+    private func string(from value: AttributeValue) -> String {
+        switch value {
+        case let .dictionary(dictionary):
+            return string(from: dictionary)
+        case let .string(string):
+            return "\"\(string)\""
+        }
+    }
 }
 
 final class TargetsHelper {
@@ -154,17 +201,15 @@ final class TargetsHelper {
         }
     }
 
-    func attributes(from pbxproj: PBXProj) throws -> [String: String] {
+    func attributes(from pbxproj: PBXProj) throws -> [String: AttributeValue] {
         guard let rootProject = try pbxproj.rootProject() else {
             return [:]
         }
 
-        return rootProject.attributes.mapValues {
-            "\($0)"
-        }
+        return rootProject.attributes.mapValues(attributeValue)
     }
 
-    func targetAttributes(pbxproj: PBXProj, target: PBXTarget) throws -> [String: String] {
+    func targetAttributes(pbxproj: PBXProj, target: PBXTarget) throws -> [String: AttributeValue] {
         guard let rootProject = try pbxproj.rootProject(),
               let attributes = rootProject.targetAttributes[target] else {
             return [:]
@@ -178,19 +223,12 @@ final class TargetsHelper {
         )
 
         return attributes.mapValues { value in
-            switch value {
-            case let pbxTarget as PBXTarget:
-                return pbxTarget.name
-            default:
-                let stringValue = "\(value)"
-
-                // Some attributes like `TestTargetID` store references to other targets
-                // as such those need to be resolved to allow semantic comparisons
-                if let target = targetsLookup[stringValue] {
-                    return target.name
-                }
-                return stringValue
+            // Some attributes like `TestTargetID` store references to other targets
+            // as such those need to be resolved to allow semantic comparisons
+            if let target = targetsLookup["\(value)"] {
+                return .string(target.name)
             }
+            return attributeValue(value)
         }
     }
 
@@ -214,6 +252,16 @@ final class TargetsHelper {
 
     private func path(from fileElement: PBXFileElement?, sourceRoot: Path) throws -> String? {
         return try pathHelper.fullPath(from: fileElement, sourceRoot: sourceRoot) ?? fileElement?.path
+    }
+
+    private func attributeValue(_ value: Any) -> AttributeValue {
+        if let pbxTarget = value as? PBXTarget {
+            return .string(pbxTarget.name)
+        }
+        if let dictionary = value as? [String: Any] {
+            return .dictionary(dictionary.mapValues(attributeValue))
+        }
+        return .string(String(describing: value))
     }
 }
 

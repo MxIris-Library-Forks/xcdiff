@@ -30,7 +30,7 @@ struct SwiftPackageDescriptor: Hashable, CustomStringConvertible, Comparable {
     }
 
     func difference(from other: SwiftPackageDescriptor?) -> String? {
-        guard let other = other else {
+        guard let other else {
             return description
         }
         guard other != self else {
@@ -52,5 +52,15 @@ struct SwiftPackageDescriptor: Hashable, CustomStringConvertible, Comparable {
 
     static func < (lhs: SwiftPackageDescriptor, rhs: SwiftPackageDescriptor) -> Bool {
         return lhs.description < rhs.description
+    }
+}
+
+extension SwiftPackageDescriptor: DiffComparable {
+    var diffKey: String {
+        identifier
+    }
+
+    var diffDescription: String {
+        description
     }
 }

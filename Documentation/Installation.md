@@ -23,7 +23,11 @@ export PATH="$PATH:$(swift build -c release --show-bin-path)"
 
 ### Homebrew
 
-*TODO*
+To install xcdiff using [Homebrew](https://brew.sh):
+
+```sh
+brew install xcdiff
+```
 
 ### Mint
 
@@ -67,7 +71,7 @@ Add xcdiff to your `Package.swift` file:
 ```swift
 dependencies: [
     // ...
-    .package(url: "https://github.com/bloomberg/xcdiff", .upToNextMinor(from: "0.9.0")),
+    .package(url: "https://github.com/bloomberg/xcdiff", .upToNextMinor(from: "0.11.0")),
 ]
 ```
 
