@@ -124,6 +124,11 @@ final class CommandsRunnerTests: XCTestCase {
         ✅ ATTRIBUTES > "ProjectTests" target
         ✅ ATTRIBUTES > "ProjectUITests" target
         ✅ SWIFT_PACKAGES
+        ✅ FILESYSTEM_SYNCHRONIZED_GROUPS > "MismatchingLibrary" target
+        ✅ FILESYSTEM_SYNCHRONIZED_GROUPS > "Project" target
+        ✅ FILESYSTEM_SYNCHRONIZED_GROUPS > "ProjectFramework" target
+        ✅ FILESYSTEM_SYNCHRONIZED_GROUPS > "ProjectTests" target
+        ✅ FILESYSTEM_SYNCHRONIZED_GROUPS > "ProjectUITests" target
 
 
         """)
@@ -209,7 +214,7 @@ final class CommandsRunnerTests: XCTestCase {
         let code = subject.run(with: command)
 
         // Then
-        XCTAssertEqual(printer.output, "0.11.0+debug.local\n")
+        XCTAssertEqual(printer.output, "0.13.0+debug.local\n")
         XCTAssertEqual(code, 0)
     }
 
